@@ -80,7 +80,7 @@ results = evaluate_models(
 
 ## Citation
 
-If you use this package in your research, please cite:
+If you use this package, please cite:
 
 ```bibtex
 @software{multimodal_bert,
