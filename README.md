@@ -18,10 +18,10 @@ Given a specific cancer cell line and target gene, the model predicts how essent
 
 The project implements four deep learning architectures that fuse these different data modalities:
 
-MultimodalCancerNet: Main architecture using cross-attention for modality fusion
-SimpleConcatNet: Baseline comparison that concatenates features in a shallow MLP 
-DeepMLP: Alternative baseline comparison with residual connections and more layers
-BaselineNet: Control model without protein sequence information using shallow MLP 
+- MultimodalCancerNet: Main architecture using cross-attention for modality fusion
+- SimpleConcatNet: Baseline comparison that concatenates features in a shallow MLP 
+- DeepMLP: Alternative baseline comparison with residual connections and more layers
+- BaselineNet: Control model without protein sequence information using shallow MLP 
 
 ## Installation
 
