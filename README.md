@@ -44,7 +44,7 @@ pip install git+https://github.com/yourusername/multimodal_bert.git
 - numpy >=1.19.0
 - cancer_data >0.3.5
 
-## Quick Start
+## Example
 
 ```python
 from multimodal_bert import FullDataLoader, evaluate_models
