@@ -1,11 +1,6 @@
 # MultimodalBERT
 
-A deep learning package for predicting gene knockout effects in cancer cell lines using multimodal data integration. This project combines multiple data modalities to predict DepMap gene dependency scores:
-
-Gene expression data from cancer cell lines
-Mutation data from cancer cell lines
-Protein sequence information encoded through ProtBERT embeddings
-
+A deep learning package for predicting gene knockout effects in cancer cell lines using multimodal data integration. This project combines multiple data modalities to predict DepMap gene dependency scores.
 Given a specific cancer cell line and target gene, the model predicts how essential that gene is for the cell line's survival (dependency score) by integrating:
 
 The cell line's gene expression profile
