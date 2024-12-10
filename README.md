@@ -89,7 +89,7 @@ results = evaluate_models(
     lr=1e-4,
     weight_decay=1e-5,
     batch_size=64,
-    epochs=70
+    epochs=50
 )
 
 # Print results
@@ -104,7 +104,7 @@ for name, metrics in results.items():
 
 The MultimodalCancerNet architecture demonstrates superior performance compared to baseline approaches:
 
-- Achieves >10% lower MSE compared to the next best performing model (DeepMLP), even as target gene set varies in size
+- Achieves >15% lower MSE compared to the next best performing model (DeepMLP), even as target gene set varies in size
 - Consistent improvement across different cell lines and gene types
 - Better captures complex biological relationships by explicitly modeling modality interactions
 - More robust predictions, especially for genes with complex functional effects

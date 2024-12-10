@@ -13,28 +13,6 @@ from sklearn.preprocessing import StandardScaler
 from torch.utils.data import TensorDataset, DataLoader
 
 
-def train_test_split(data_dict, test_size=0.2, random_state=42):
-    """Split data into train and test sets, handling MultiIndex DataFrames"""
-    np.random.seed(random_state)
-
-    # Get the unique index pairs from any of the DataFrames
-    index_pairs = list(data_dict['effect_data'].index)
-
-    # Shuffle the index pairs
-    np.random.shuffle(index_pairs)
-
-    # Calculate split point
-    split_idx = int(len(index_pairs) * (1 - test_size))
-    train_indices = index_pairs[:split_idx]
-    test_indices = index_pairs[split_idx:]
-
-    # Split each DataFrame using the index pairs
-    train_data = {k: v.loc[train_indices] for k, v in data_dict.items()}
-    test_data = {k: v.loc[test_indices] for k, v in data_dict.items()}
-
-    return train_data, test_data
-
-
 class FeatureNormalizer:
     """
     Normalizer for processing different modalities of input data.
