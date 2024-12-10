@@ -114,7 +114,7 @@ class FusionNetwork(nn.Module):
         expr_mut_gene = self.gene_attention(expr_mut, gene_features)
 
         # Concatenate all features
-        combined = torch.cat([expr_mut_gene, mut_features, gene_features], dim=1)
+        combined = torch.cat([expr_mut_gene, expr_features, gene_features], dim=1)
 
         return self.fusion_layers(combined).squeeze()
 
@@ -168,7 +168,7 @@ class SimpleConcatNet(nn.Module):
     Baseline model that concatenates all features and applies 3 MLP layers.
 
     This model serves as a simple baseline that directly concatenates features
-    from all modalities without sophisticated fusion mechanisms.
+    from all modalities without sophisticated fusion mechanisms or residual connections
 
     Args:
         expression_dim (int): Dimension of expression features
@@ -207,7 +207,7 @@ class DeepMLP(nn.Module):
     """
     Deep MLP architecture with residual connections.
 
-    Implements a deeper (4+ layers) network architecture with skip connections
+    Implements a deeper (6 layers) network architecture with skip connections
     for better gradient flow and feature processing.
 
     Args:

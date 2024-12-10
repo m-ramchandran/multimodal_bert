@@ -33,6 +33,7 @@ data_dir.mkdir(exist_ok=True)
 # Set environment variable
 os.environ["CANCER_DATA_DIR"] = str(data_dir)
 
+
 class FullDataLoader:
     @staticmethod
     def load_cancer_data():
@@ -150,7 +151,7 @@ class FullDataLoader:
     def compute_protbert_embeddings(sequences: Dict[str, str], device: str = "cpu", batch_size: int = 128,
                                     max_workers: int = 4) -> pd.DataFrame:
         """
-        Compute ProtBERT embeddings using concurrent processing.
+        Compute ProtBERT embeddings using parallel processing.
 
         Args:
             sequences: Dictionary mapping gene names to their sequences
@@ -162,10 +163,9 @@ class FullDataLoader:
             DataFrame containing embeddings for all sequences
         """
         from concurrent.futures import ThreadPoolExecutor, as_completed
-        import math
 
         def process_batch(batch_data):
-            if not batch_data:  # Safety check for empty batches
+            if not batch_data:  # Check for empty batches
                 return {}
 
             batch_genes, batch_seqs = zip(*batch_data)
@@ -181,6 +181,7 @@ class FullDataLoader:
                 ).to(device)
 
                 outputs = model(**encoded)
+                #Get CLS token embedding
                 batch_embeddings = outputs.last_hidden_state[:, 0, :].cpu()
 
                 # Convert to dictionary
@@ -219,7 +220,7 @@ class FullDataLoader:
             for future in tqdm(as_completed(future_to_batch),
                                total=len(batches),
                                desc="Computing embeddings"):
-                batch_idx = future_to_batch[future]
+                batch_idx = future_to_batch[future] #for error handling
                 try:
                     batch_embeddings = future.result()
                     embeddings_dict.update(batch_embeddings)
@@ -339,18 +340,3 @@ class FullDataLoader:
             'mutation_data': mutation_df,
             'embedding_data': embedding_df
         }
-
-    @staticmethod
-    def subset_data(data_dict, sequences):
-        """Subset data from load_cancer_data and sequences from load_sequences to the same genes"""
-
-        common_genes = set(sequences.keys()).intersection(set(list(data_dict['expression_data'].columns)))
-
-        return {
-            'expression_data': data_dict['expression_data'].reindex(columns=sorted(common_genes)),
-            'mutation_data': data_dict['mutation_data'].reindex(columns=sorted(common_genes)),
-            'effect_data': data_dict['effect_data'].reindex(columns=sorted(common_genes)),
-            'annotations': data_dict['annotations'],
-            'sequences': sequences
-        }
-

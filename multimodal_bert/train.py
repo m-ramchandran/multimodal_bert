@@ -13,6 +13,27 @@ from sklearn.preprocessing import StandardScaler
 from torch.utils.data import TensorDataset, DataLoader
 
 
+def train_test_split(data_dict, test_size=0.2, random_state=42):
+    """Split data into train and test sets, handling MultiIndex DataFrames"""
+    np.random.seed(random_state)
+
+    # Get the unique index pairs from any of the DataFrames
+    index_pairs = list(data_dict['effect_data'].index)
+
+    # Shuffle the index pairs
+    np.random.shuffle(index_pairs)
+
+    # Calculate split point
+    split_idx = int(len(index_pairs) * (1 - test_size))
+    train_indices = index_pairs[:split_idx]
+    test_indices = index_pairs[split_idx:]
+
+    # Split each DataFrame using the index pairs
+    train_data = {k: v.loc[train_indices] for k, v in data_dict.items()}
+    test_data = {k: v.loc[test_indices] for k, v in data_dict.items()}
+
+    return train_data, test_data
+
 class FeatureNormalizer:
     """
     Normalizer for processing different modalities of input data.
@@ -195,13 +216,13 @@ class CancerTrainer:
             'actuals': actuals
         }
 
-    def train(self, train_data, val_data, batch_size=32, epochs=50, early_stopping_patience=10):
+    def train(self, train_data, val_size=.2, batch_size=32, epochs=50, early_stopping_patience=10):
         """
         Complete training loop with validation and early stopping.
 
         Args:
             train_data (dict): Training data dictionary
-            val_data (dict): Validation data dictionary
+            val_size (float): Proportion of data to randomly hold out for validation
             batch_size (int): Batch size for training (default: 32)
             epochs (int): Maximum number of epochs (default: 50)
             early_stopping_patience (int): Patience for early stopping (default: 10)
@@ -217,9 +238,12 @@ class CancerTrainer:
             - Uses learning rate scheduling
         """
 
+        # Create internal validation split from training data
+        train_subset, val_subset = train_test_split(train_data, test_size=val_size)
+
         # Create datasets and dataloaders
-        train_dataset = self.prepare_data(train_data)
-        val_dataset = self.prepare_data(val_data)
+        train_dataset = self.prepare_data(train_subset)
+        val_dataset = self.prepare_data(val_subset)
 
         # Configure dataloaders with drop_last
         train_loader = DataLoader(
@@ -231,7 +255,7 @@ class CancerTrainer:
         val_loader = DataLoader(
             val_dataset,
             batch_size=batch_size,
-            drop_last=True
+            drop_last=False
         )
 
         # Fit normalizer on training data
@@ -242,6 +266,7 @@ class CancerTrainer:
 
         best_val_loss = float('inf')
         patience_counter = 0
+        best_model_state = None
         train_losses = []
         val_losses = []
 
@@ -259,16 +284,16 @@ class CancerTrainer:
 
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
+                best_model_state = self.model.state_dict().copy()
                 patience_counter = 0
-                torch.save({
-                    'model_state_dict': self.model.state_dict(),
-                    'normalizer': self.normalizer
-                }, 'best_model.pt')
             else:
                 patience_counter += 1
                 if patience_counter >= early_stopping_patience:
                     print("Early stopping triggered!")
                     break
+
+        # Load the best model state
+        self.model.load_state_dict(best_model_state)
 
         return {'train_losses': train_losses, 'val_losses': val_losses}
 

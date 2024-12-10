@@ -15,8 +15,8 @@ if __name__ == '__main__':
         val_size=0.2,
         lr=1e-4,
         weight_decay=1e-5,
-        batch_size=32,
-        epochs=70,
+        batch_size=64, #128
+        epochs=50, #70
         random_state=42
     )
 

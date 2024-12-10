@@ -4,34 +4,13 @@ for predicting cancer dependency prediction.
 """
 
 import numpy as np
-from .train import CancerTrainer
+from .train import CancerTrainer, train_test_split
 from .model import MultimodalCancerNet, SimpleConcatNet, DeepMLP, BaselineNet
 from torch.utils.data import DataLoader
+import torch
 
 
-def train_test_split(data_dict, test_size=0.2, random_state=42):
-    """Split data into train and test sets, handling MultiIndex DataFrames"""
-    np.random.seed(random_state)
-
-    # Get the unique index pairs from any of the DataFrames
-    index_pairs = list(data_dict['effect_data'].index)
-
-    # Shuffle the index pairs
-    np.random.shuffle(index_pairs)
-
-    # Calculate split point
-    split_idx = int(len(index_pairs) * (1 - test_size))
-    train_indices = index_pairs[:split_idx]
-    test_indices = index_pairs[split_idx:]
-
-    # Split each DataFrame using the index pairs
-    train_data = {k: v.loc[train_indices] for k, v in data_dict.items()}
-    test_data = {k: v.loc[test_indices] for k, v in data_dict.items()}
-
-    return train_data, test_data
-
-
-def evaluate_models(data_dict, test_size=0.2, models=None, random_state = 42, **kwargs):
+def evaluate_models(data_dict, val_size=0.2, test_size=0.2, models=None, random_state=42, **kwargs):
     """
     Compare different model architectures including baseline without embeddings.
 
@@ -40,6 +19,7 @@ def evaluate_models(data_dict, test_size=0.2, models=None, random_state = 42, **
 
     Args:
         data_dict (dict): Dictionary containing all modality data
+        val_size (float): Proportion of data to randomly hold out for validation
         test_size (float): Proportion of data for testing (default: 0.2)
         models (dict): Dictionary of model instances to evaluate (optional)
         random_state (int): Random seed for reproducibility (default: 42)
@@ -64,7 +44,6 @@ def evaluate_models(data_dict, test_size=0.2, models=None, random_state = 42, **
         - Handles model training, evaluation, and metric computation
     """
 
-    # Separate trainer initialization parameters from training parameters
     trainer_init_params = {
         'lr': kwargs.get('lr', 1e-4),
         'weight_decay': kwargs.get('weight_decay', 1e-5)
@@ -116,9 +95,15 @@ def evaluate_models(data_dict, test_size=0.2, models=None, random_state = 42, **
         trainer = CancerTrainer(model=model, **trainer_init_params)
 
         # Train model
-        history = trainer.train(train_data, test_data, **training_params)
+        trainer.train(train_data, val_size, **training_params)
 
-        # Evaluate on test set
+        # # Load the best model checkpoint before evaluation
+        # print(f"Loading best checkpoint for {name}...")
+        # checkpoint = torch.load('best_model.pt', map_location=trainer.device)
+        # trainer.model.load_state_dict(checkpoint['model_state_dict'])
+        # trainer.normalizer = checkpoint['normalizer']
+
+        # Evaluate on test set using best model
         test_dataset = trainer.prepare_data(test_data)
         test_loader = DataLoader(
             test_dataset,
@@ -138,7 +123,7 @@ def evaluate_models(data_dict, test_size=0.2, models=None, random_state = 42, **
             'mse': mse,
             'mae': mae,
             'r2': r2,
-            'training_history': history
+            'best_model': trainer.model
         }
 
         print(f"{name} Results:")
