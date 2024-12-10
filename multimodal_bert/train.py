@@ -34,6 +34,7 @@ def train_test_split(data_dict, test_size=0.2, random_state=42):
 
     return train_data, test_data
 
+
 class FeatureNormalizer:
     """
     Normalizer for processing different modalities of input data.
@@ -216,13 +217,13 @@ class CancerTrainer:
             'actuals': actuals
         }
 
-    def train(self, train_data, val_size=.2, batch_size=32, epochs=50, early_stopping_patience=10):
+    def train(self, train_data, val_data, batch_size=32, epochs=50, early_stopping_patience=10):
         """
         Complete training loop with validation and early stopping.
 
         Args:
             train_data (dict): Training data dictionary
-            val_size (float): Proportion of data to randomly hold out for validation
+            val_data (dict): Validation data dictionary
             batch_size (int): Batch size for training (default: 32)
             epochs (int): Maximum number of epochs (default: 50)
             early_stopping_patience (int): Patience for early stopping (default: 10)
@@ -238,12 +239,9 @@ class CancerTrainer:
             - Uses learning rate scheduling
         """
 
-        # Create internal validation split from training data
-        train_subset, val_subset = train_test_split(train_data, test_size=val_size)
-
         # Create datasets and dataloaders
-        train_dataset = self.prepare_data(train_subset)
-        val_dataset = self.prepare_data(val_subset)
+        train_dataset = self.prepare_data(train_data)
+        val_dataset = self.prepare_data(val_data)
 
         # Configure dataloaders with drop_last
         train_loader = DataLoader(

@@ -83,9 +83,11 @@ def evaluate_models(data_dict, val_size=0.2, test_size=0.2, models=None, random_
             )
         }
 
-    # Split data
+    # Split data into train-test
     train_data, test_data = train_test_split(data_dict, test_size=test_size, random_state=random_state)
 
+    # Split data into train-val
+    train_data, val_data = train_test_split(train_data, test_size=val_size, random_state=random_state)
     # Track comparative performance
     baseline_performance = None
     results = {}
@@ -95,13 +97,7 @@ def evaluate_models(data_dict, val_size=0.2, test_size=0.2, models=None, random_
         trainer = CancerTrainer(model=model, **trainer_init_params)
 
         # Train model
-        trainer.train(train_data, val_size, **training_params)
-
-        # # Load the best model checkpoint before evaluation
-        # print(f"Loading best checkpoint for {name}...")
-        # checkpoint = torch.load('best_model.pt', map_location=trainer.device)
-        # trainer.model.load_state_dict(checkpoint['model_state_dict'])
-        # trainer.normalizer = checkpoint['normalizer']
+        trainer.train(train_data, val_data, **training_params)
 
         # Evaluate on test set using best model
         test_dataset = trainer.prepare_data(test_data)
